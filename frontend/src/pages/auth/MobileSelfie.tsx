@@ -12,6 +12,7 @@ export default function MobileSelfie() {
   const [stage, setStage] = useState<Stage>('loading')
   const [errorMsg, setErrorMsg] = useState('')
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [faceTemplate, setFaceTemplate] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [countdown, setCountdown] = useState(120)
   const [stream, setStream] = useState<MediaStream | null>(null)
@@ -75,11 +76,40 @@ export default function MobileSelfie() {
     return () => clearTimeout(t)
   }, [stage, countdown])
 
+  const captureFaceTemplate = (video: HTMLVideoElement): string | null => {
+    const vw = video.videoWidth || 400
+    const vh = video.videoHeight || 300
+    const canvas = document.createElement('canvas')
+    canvas.width = 40
+    canvas.height = 40
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    const size = Math.min(vw, vh)
+    const sx = (vw - size) / 2
+    const sy = (vh - size) / 2
+    ctx.drawImage(video, sx, sy, size, size, 0, 0, 40, 40)
+    const imgData = ctx.getImageData(0, 0, 40, 40)
+    const data = imgData.data
+    const gray: number[] = []
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]
+      const g = data[i + 1]
+      const b = data[i + 2]
+      gray.push(Math.round(0.299 * r + 0.587 * g + 0.114 * b))
+    }
+    const mean = gray.reduce((s, v) => s + v, 0) / gray.length
+    if (mean < 5) return null
+    return JSON.stringify(gray)
+  }
+
   // ── Capture selfie ────────────────────────────────────────────────────────
   const capture = () => {
     const video = videoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) return
+
+    const template = captureFaceTemplate(video)
+    setFaceTemplate(template)
 
     canvas.width = video.videoWidth || 480
     canvas.height = video.videoHeight || 360
@@ -97,6 +127,7 @@ export default function MobileSelfie() {
 
   const retake = () => {
     setCapturedImage(null)
+    setFaceTemplate(null)
     startCamera()
   }
 
@@ -116,6 +147,7 @@ export default function MobileSelfie() {
         sessionId,
         token,
         selfieBase64: capturedImage,
+        faceTemplate: faceTemplate || undefined
       })
       clearInterval(progInterval)
       setUploadProgress(100)

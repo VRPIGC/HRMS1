@@ -33,6 +33,6 @@ export const attendanceApi = {
   // Mobile QR attendance
   createMobileQrSession: () => api.post<{ success: boolean; data: { sessionId: string; qrCode: string; expiresAt: string; mobileUrl: string } }>('/attendance/mobile-qr/create'),
   getMobileQrStatus: (sessionId: string) => api.get<{ success: boolean; data: { status: string; accessToken?: string; refreshToken?: string } }>(`/attendance/mobile-qr/status/${sessionId}`),
-  verifyMobileSelfie: (data: { sessionId: string; token: string; selfieBase64: string }) => api.post<{ success: boolean; data: any }>('/attendance/mobile-qr/verify', data),
+  verifyMobileSelfie: (data: { sessionId: string; token: string; selfieBase64: string; faceTemplate?: string }) => api.post<{ success: boolean; data: any }>('/attendance/mobile-qr/verify', data),
 }
 
