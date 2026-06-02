@@ -25,4 +25,5 @@ export const documentApi = {
   upload: (data: FormData) => api.post<{ data: DocumentData }>('/documents', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   replace: (id: string, data: FormData) => api.put<{ data: DocumentData }>(`/documents/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id: string) => api.delete<{ message: string }>(`/documents/${id}`),
+  verify: (id: string) => api.put<{ data: DocumentData }>(`/documents/${id}/verify`),
 }

@@ -25,6 +25,7 @@ export const employeeController = {
           addressInfo: true,
           emergencyContact: true,
           onboardingDocs: true,
+          documents: true,
         }
       })
 
@@ -125,6 +126,32 @@ export const employeeController = {
       }
 
       const fileUrl = `/uploads/employees/${file.filename}`
+
+      // Also copy to HR document folder and create prisma.document record
+      const fs = require('fs')
+      const path = require('path')
+      const dirName = `${employee.firstName.replace(/\\s+/g, '')}${employee.lastName.replace(/\\s+/g, '')}_${employee.employeeCode}`
+      const hrEmployeeDir = path.join(process.cwd(), 'uploads', 'documents', dirName)
+      
+      if (!fs.existsSync(hrEmployeeDir)) {
+        fs.mkdirSync(hrEmployeeDir, { recursive: true })
+      }
+      
+      const hrFilePath = path.join(hrEmployeeDir, file.filename)
+      fs.copyFileSync(file.path, hrFilePath)
+      const hrFileUrl = `/uploads/documents/${dirName}/${file.filename}`
+
+      await prisma.document.create({
+        data: {
+          tenantId: employee.tenantId,
+          employeeId: employee.id,
+          name: file.originalname,
+          type: documentType,
+          fileUrl: hrFileUrl,
+          fileSize: file.size,
+          verified: false,
+        }
+      })
 
       // Update or create document entry
       await prisma.employeeDocument.deleteMany({

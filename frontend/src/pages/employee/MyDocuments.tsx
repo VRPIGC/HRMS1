@@ -28,7 +28,7 @@ export default function MyDocuments() {
       const emp = res.data.data
       setEmployee(emp)
 
-      const backendDocs = emp.onboardingDocs || []
+      const hrDocs = emp.documents || []
       const documentTypes = [
         { key: 'aadhaarCard', name: 'Aadhaar Card (National ID)' },
         { key: 'panCard', name: 'PAN Card (Tax Registration)' },
@@ -38,14 +38,14 @@ export default function MyDocuments() {
       ]
 
       const mappedDocs: DocumentItem[] = documentTypes.map((type) => {
-        const found = backendDocs.find((d: any) => d.documentType === type.key)
+        const found = hrDocs.find((d: any) => d.type === type.key)
         return {
           id: type.key,
           name: type.name,
-          fileName: found ? found.fileName : null,
+          fileName: found ? found.name : null,
           fileUrl: found ? found.fileUrl : undefined,
-          status: found ? 'VERIFIED' : 'PENDING_UPLOAD',
-          fileSize: found ? '1.5 MB' : undefined, 
+          status: found ? (found.verified ? 'VERIFIED' : 'PENDING_VERIFICATION') : 'PENDING_UPLOAD',
+          fileSize: found && found.fileSize ? `${(found.fileSize / 1024 / 1024).toFixed(2)} MB` : undefined, 
           uploadedDate: found ? new Date(found.uploadedAt).toISOString().split('T')[0] : undefined
         }
       })

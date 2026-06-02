@@ -154,6 +154,30 @@ export const documentController = {
     } catch (error: any) {
       return sendError(res, error.message || 'Failed to delete document', 500)
     }
+  },
+
+  async verify(req: AuthRequest, res: Response) {
+    const tenantId = req.tenantId ?? req.user?.tenantId
+    if (!tenantId) return sendError(res, 'Tenant context not found', 400)
+
+    const { id } = req.params
+
+    try {
+      const existingDoc = await prisma.document.findFirst({
+        where: { id, tenantId }
+      })
+
+      if (!existingDoc) return sendError(res, 'Document not found', 404)
+
+      const updatedDoc = await prisma.document.update({
+        where: { id },
+        data: { verified: true }
+      })
+
+      return sendSuccess(res, updatedDoc, 'Document verified successfully')
+    } catch (error: any) {
+      return sendError(res, error.message || 'Failed to verify document', 500)
+    }
   }
 }
 

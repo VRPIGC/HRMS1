@@ -125,6 +125,18 @@ export default function HRDocuments() {
     }
   }
 
+  const handleVerifyClick = async (docId: string) => {
+    setLoading(true)
+    try {
+      await documentApi.verify(docId)
+      fetchDocuments()
+    } catch (err: any) {
+      console.error('Failed to verify document', err)
+      alert(err.response?.data?.message || 'Failed to verify document')
+      setLoading(false)
+    }
+  }
+
   const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}${fileUrl}`)
@@ -480,6 +492,14 @@ export default function HRDocuments() {
                               >
                                 <Download size={14} /> Download
                               </button>
+                              {!doc.verified && (
+                                <button
+                                  onClick={() => handleVerifyClick(doc.id)}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '6px', color: '#059669', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}
+                                >
+                                  <CheckCircle size={14} /> Verify
+                                </button>
+                              )}
                               <button
                                 disabled={isUploading && replacingDocId === doc.id}
                                 onClick={() => handleReplaceClick(doc.id)}

@@ -14,6 +14,7 @@ router.use(authenticate, authorize('ADMIN', 'HR', 'EMPLOYEE'), tenantIsolation)
 router.get('/', documentController.list)
 router.post('/', upload.single('file'), documentController.upload)
 router.put('/:id', upload.single('file'), documentController.replace)
+router.put('/:id/verify', documentController.verify)
 router.delete('/:id', documentController.delete)
 
 export default router
