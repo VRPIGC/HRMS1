@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/auth.store'
+import { employeeApi } from '../../api/employee.api'
 import { triggerHrNotification } from '../../utils/notif'
 import {
   ClipboardList, CheckCircle2, Calendar, Clock, XCircle,
@@ -64,14 +65,21 @@ export default function Tasks() {
   const user = useAuthStore(state => state.user)
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [confirmReject, setConfirmReject] = useState<string | null>(null)
+  const [empId, setEmpId] = useState<string | null>(null)
 
-  const load = () => setTasks(loadMyTasks(user?.id))
+  useEffect(() => {
+    employeeApi.getProfile().then(res => setEmpId(res.data.data.id)).catch(console.error)
+  }, [])
+
+  const load = () => {
+    if (empId) setTasks(loadMyTasks(empId))
+  }
 
   useEffect(() => {
     load()
     const iv = setInterval(load, 5000)
     return () => clearInterval(iv)
-  }, [user?.id])
+  }, [empId])
 
   const changeStatus = (id: string, next: TaskItem['status']) => {
     const updated = tasks.map(t => t.id === id ? { ...t, status: next } : t)
