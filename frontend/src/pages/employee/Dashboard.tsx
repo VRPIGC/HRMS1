@@ -531,7 +531,7 @@ export default function Dashboard() {
         try {
           const statusRes = await attendanceApi.getMobileQrStatus(qrSessionId)
           const { status, accessToken: at, refreshToken: rt } = statusRes.data.data
-          if (status === 'VERIFIED' && qrStatus !== 'verified') {
+          if (status === 'VERIFIED') {
             setQrStatus('verified')
             qrSocketRef.current?.disconnect()
             const { user } = useAuthStore.getState()
