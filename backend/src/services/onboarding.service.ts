@@ -8,7 +8,13 @@ import { prisma } from '../config/database'
 import { hashPassword } from '../utils/password.utils'
 import { notificationService } from './notification.service'
 
-const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '')
+let baseFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+try {
+  baseFrontendUrl = new URL(baseFrontendUrl).origin
+} catch (e) {
+  baseFrontendUrl = baseFrontendUrl.replace(/\/login\/?$/, '')
+}
+const FRONTEND_URL = baseFrontendUrl.replace(/\/$/, '')
 const STORAGE_ROOT = path.join(__dirname, '../../storage/onboarding')
 const INVITE_EXPIRY_DAYS = 7
 const TEMP_PASSWORD_EXPIRY_DAYS = 30

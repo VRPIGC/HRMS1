@@ -61,7 +61,12 @@ export const mobileQrController = {
       })
 
       // Build the mobile URL that will be embedded in the QR code
-      const frontendUrl = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:3000'
+      let frontendUrl = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:3000'
+      try {
+        frontendUrl = new URL(frontendUrl).origin
+      } catch (e) {
+        frontendUrl = frontendUrl.replace(/\/login\/?$/, '')
+      }
       const mobileUrl = `${frontendUrl}/mobile-selfie/${session.id}?token=${token}`
 
       // Generate QR as base64 PNG data URI

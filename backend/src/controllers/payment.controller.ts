@@ -154,13 +154,19 @@ export const paymentController = {
         }, 'PhonePe Simulation Order created successfully')
       }
 
-      // Real integration
+      let baseFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
+      try {
+        baseFrontendUrl = new URL(baseFrontendUrl).origin
+      } catch (e) {
+        baseFrontendUrl = baseFrontendUrl.replace(/\/login\/?$/, '')
+      }
+
       const payload = {
         merchantId: mid,
         merchantTransactionId,
         merchantUserId: user?.id || 'USER_GUEST',
         amount: amountInPaise,
-        redirectUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/superadmin/wallet?gateway=phonepe&txnId=${merchantTransactionId}&credits=${credits}`,
+        redirectUrl: `${baseFrontendUrl}/superadmin/wallet?gateway=phonepe&txnId=${merchantTransactionId}&credits=${credits}`,
         redirectMode: 'REDIRECT',
         paymentInstrument: {
           type: 'PAY_PAGE'
