@@ -24,7 +24,8 @@ export default function Companies() {
   // Document Request State
   const [documentRequestLoading, setDocumentRequestLoading] = useState<string | null>(null)
 
-
+  // Resend Credentials State
+  const [resendCredsLoading, setResendCredsLoading] = useState<string | null>(null)
 
   const fetchCompanies = async () => {
     try {
@@ -129,6 +130,20 @@ export default function Companies() {
       alert(err.response?.data?.message || 'Failed to send document request email.')
     } finally {
       setDocumentRequestLoading(null)
+    }
+  }
+
+  const handleResendCredentials = async (companyId: string, companyName: string) => {
+    if (!confirm(`Are you sure you want to regenerate and resend credentials to the admin of ${companyName}? This will reset their current password.`)) return
+
+    try {
+      setResendCredsLoading(companyId)
+      const response = await superAdminApi.resendCredentials(companyId)
+      alert(response.message || 'Credentials resent successfully!')
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to resend credentials.')
+    } finally {
+      setResendCredsLoading(null)
     }
   }
 
@@ -270,6 +285,14 @@ export default function Companies() {
                         onClick={() => navigate(`/superadmin/companies/edit/${company.id}`)}
                       >
                         Edit
+                      </button>
+                      <button
+                        className="btn-secondary"
+                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' }}
+                        onClick={() => handleResendCredentials(company.id, company.name)}
+                        disabled={resendCredsLoading === company.id}
+                      >
+                        {resendCredsLoading === company.id ? 'Sending...' : 'Resend Credentials'}
                       </button>
                       <button
                         className="btn-secondary"

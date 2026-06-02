@@ -94,6 +94,11 @@ export const superAdminApi = {
     return response.data.data
   },
 
+  async resendCredentials(id: string) {
+    const response = await api.post<{ success: boolean; message: string }>(`/superadmin/companies/${id}/resend-credentials`)
+    return response.data
+  },
+
   async updateCompanyFull(id: string, formData: FormData) {
     const response = await api.put<{ success: boolean; data: Company }>(`/superadmin/companies/${id}/full`, formData, {
       headers: {

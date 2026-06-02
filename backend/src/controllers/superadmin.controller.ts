@@ -1688,5 +1688,134 @@ export const superAdminController = {
     } catch (error: any) {
       return sendError(res, error.message || 'Failed to delete document', 500)
     }
+  },
+
+  async resendCredentials(req: Request, res: Response) {
+    try {
+      const { id } = req.params
+
+      const tenant = await prisma.tenant.findUnique({
+        where: { id },
+        include: {
+          companySettings: true,
+          plan: true,
+        }
+      })
+
+      if (!tenant) return sendError(res, 'Company not found', 404)
+
+      const adminUser = await prisma.user.findFirst({
+        where: { tenantId: id, role: 'ADMIN' }
+      })
+
+      if (!adminUser) return sendError(res, 'Company admin not found', 404)
+
+      // Generate a new password
+      const newPassword = `Admin@${Math.floor(1000 + Math.random() * 9000)}`
+      const { hashPassword } = await import('../utils/password.utils')
+      const hashedPassword = await hashPassword(newPassword)
+
+      await prisma.user.update({
+        where: { id: adminUser.id },
+        data: { password: hashedPassword }
+      })
+
+      // Send email
+      const { onboardingService } = await import('../services/onboarding.service')
+      const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined)
+      const loginUrl = onboardingService.buildCompanyPortalUrl(tenant.subdomain || '', origin)
+      const companyName = tenant.name
+      const adminFullName = `${adminUser.firstName} ${adminUser.lastName}`
+      const planType = tenant.plan?.name || 'Starter'
+      const subscriptionDuration = tenant.companySettings?.subscriptionDuration || '12 months'
+      const subscriptionEndDate = tenant.companySettings?.subscriptionEndDate || new Date()
+
+      const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Welcome to HRMS Portal – Your Company Account is Ready</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+    .wrapper { width: 100%; background-color: #f8fafc; padding: 40px 20px; box-sizing: border-box; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .header { background-color: #4f46e5; padding: 40px; text-align: center; }
+    .header h1 { color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; }
+    .content { padding: 40px; }
+    .content h2 { color: #0f172a; font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px; }
+    .content p { font-size: 16px; line-height: 1.6; color: #475569; margin-top: 0; margin-bottom: 24px; }
+    .creds-box { background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #e2e8f0; }
+    .creds-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 16px; }
+    .creds-row { margin-bottom: 12px; font-size: 15px; }
+    .creds-label { font-weight: 600; color: #475569; display: inline-block; width: 140px; }
+    .creds-value { font-family: monospace; color: #0f172a; font-weight: bold; }
+    .btn { display: inline-block; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; padding: 14px 30px; border-radius: 8px; font-weight: 700; }
+    .subscription-info { background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .subscription-info h3 { color: #065f46; margin: 0 0 8px 0; font-size: 16px; }
+    .subscription-info p { color: #047857; margin: 0; font-size: 14px; }
+    .footer { background-color: #f8fafc; padding: 30px 40px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 13px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>Welcome to HRMS Portal</h1>
+      </div>
+      <div class="content">
+        <h2>Your Company Account Credentials</h2>
+        <p>Hello ${adminFullName},</p>
+        <p>We are resending your company account credentials for <strong>${companyName}</strong>.</p>
+        
+        <div class="subscription-info">
+          <h3>📋 Subscription Details</h3>
+          <p><strong>Plan:</strong> ${planType}</p>
+          <p><strong>Duration:</strong> ${subscriptionDuration}</p>
+          <p><strong>Valid Until:</strong> ${new Date(subscriptionEndDate).toLocaleDateString()}</p>
+        </div>
+        
+        <p>Please use the following credentials to log in:</p>
+        
+        <div class="creds-box">
+          <div class="creds-title">Login Credentials</div>
+          <div class="creds-row">
+            <span class="creds-label">Workspace:</span>
+            <span class="creds-value">https://hrmsvrpigroup.com/login</span>
+          </div>
+          <div class="creds-row">
+            <span class="creds-label">Username:</span>
+            <span class="creds-value">${adminUser.username || adminUser.email}</span>
+          </div>
+          <div class="creds-row">
+            <span class="creds-label">Password:</span>
+            <span class="creds-value">${newPassword}</span>
+          </div>
+        </div>
+        
+        <p style="color: #dc2626; font-weight: 600; font-size: 14px;">⚠️ Please reset your password after first login for security.</p>
+        
+        <div style="text-align: center; margin-top: 32px; margin-bottom: 16px;">
+          <a href="${loginUrl}" class="btn" target="_blank">Access Your Dashboard</a>
+        </div>
+      </div>
+      <div class="footer">
+        <p>If you have any questions or require support, please contact our administrative team.</p>
+        <p>&copy; 2026 HRMS Enterprise. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+      `
+
+      const subject = `Resend Credentials – ${companyName} Account Ready`
+      await notificationService.sendEmail(adminUser.email, subject, htmlBody)
+
+      return sendSuccess(res, null, 'Credentials have been regenerated and resent successfully')
+    } catch (error: any) {
+      console.error('[RESEND CREDENTIALS ERROR]', error)
+      return sendError(res, error.message || 'Failed to resend credentials', 500)
+    }
   }
 }

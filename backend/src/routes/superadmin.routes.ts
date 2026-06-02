@@ -49,6 +49,7 @@ router.get('/companies/:id', superAdminController.getCompany)
 router.put('/companies/:id/full', uploadFields, superAdminController.updateCompanyFull)
 router.post('/companies/:id/credits', superAdminController.addCredits)
 router.post('/companies/:id/document-request', superAdminController.sendDocumentRequest)
+router.post('/companies/:id/resend-credentials', superAdminController.resendCredentials)
 router.delete('/companies/:id', superAdminController.deleteCompany)
 
 // Documents API
