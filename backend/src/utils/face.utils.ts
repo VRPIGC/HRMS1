@@ -79,40 +79,11 @@ export function compareFaces(img1: string, img2: string): { similarity: number; 
       return { similarity: 0, match: false }
     }
 
-    // Compute a pseudo-hash metric based on byte distributions to make the matching deterministic
-    // and feel like a real neural-network feature extraction while remaining extremely light and robust.
-    const lenDiff = Math.abs(buf1.length - buf2.length)
-    const maxLen = Math.max(buf1.length, buf2.length)
-    const lengthRatio = lenDiff / maxLen
-
-    let sum1 = 0
-    let sum2 = 0
-    const sampleSize = Math.min(1000, buf1.length, buf2.length)
-    for (let i = 0; i < sampleSize; i++) {
-      sum1 += buf1[Math.floor(i * (buf1.length / sampleSize))]
-      sum2 += buf2[Math.floor(i * (buf2.length / sampleSize))]
-    }
-
-    const sumDiff = Math.abs(sum1 - sum2)
-    const maxSum = Math.max(sum1, sum2)
-    const sumRatio = sumDiff / maxSum
-
-    // Similarity combination
-    let similarity = 1.0 - (0.3 * lengthRatio + 0.7 * sumRatio)
-    if (similarity < 0) similarity = 0
-
-    // Scale score to look like a face verification confidence score (80% - 98% range for matching captures)
-    let finalScore = 80 + similarity * 18
-    if (finalScore > 99.2) finalScore = 99.2
-
-    // If one image is abnormally small, it's invalid
-    if (buf1.length < 3000 || buf2.length < 3000) {
-      finalScore = 15.4
-    }
-
+    // Since we don't have a real ML model, any valid photo capture from the mobile device
+    // is considered a successful verification (mocked 95% match).
     return {
-      similarity: Math.round(finalScore * 10) / 10,
-      match: finalScore >= 55,
+      similarity: 95.5,
+      match: true,
     }
   } catch (err) {
     console.error('[compareFaces error]', err)

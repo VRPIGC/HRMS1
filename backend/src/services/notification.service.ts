@@ -31,14 +31,14 @@ export const notificationService = {
         throw new Error('RESEND_API_KEY is missing in environment variables.')
       }
 
-      // Convert attachments to Resend format if they exist
+      // Convert attachments to Resend format if they exist (Resend expects Base64 or Buffer, but Base64 is safer)
       const mappedAttachments = attachments?.map(att => ({
         filename: att.filename,
-        content: att.content,
+        content: Buffer.isBuffer(att.content) ? att.content.toString('base64') : att.content,
       }))
 
       const { data, error } = await getResendClient().emails.send({
-        from: process.env.SMTP_FROM || 'HRMS <onboarding@resend.dev>', // You should change this to a verified domain email later
+        from: process.env.SMTP_FROM || 'HRMS <onboarding@resend.dev>', 
         to: [to],
         subject,
         html,
