@@ -1697,7 +1697,7 @@ export const superAdminController = {
       const tenant = await prisma.tenant.findUnique({
         where: { id },
         include: {
-          companySettings: true,
+          companySetting: true,
           plan: true,
         }
       })
@@ -1727,8 +1727,8 @@ export const superAdminController = {
       const companyName = tenant.name
       const adminFullName = `${adminUser.firstName} ${adminUser.lastName}`
       const planType = tenant.plan?.name || 'Starter'
-      const subscriptionDuration = tenant.companySettings?.subscriptionDuration || '12 months'
-      const subscriptionEndDate = tenant.companySettings?.subscriptionEndDate || new Date()
+      const subscriptionDuration = tenant.companySetting?.subscriptionDuration || '12 months'
+      const subscriptionEndDate = tenant.companySetting?.subscriptionEndDate || new Date()
 
       const htmlBody = `
 <!DOCTYPE html>
