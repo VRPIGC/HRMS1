@@ -50,6 +50,7 @@ model Tenant {
   hrOperators       HROperator[]
   salaryAdvances    SalaryAdvance[]
   tenantDocuments   TenantDocument[]
+  employeeRequests  EmployeeRequest[]
 }
 
 enum TenantStatus {
@@ -187,6 +188,7 @@ model Employee {
   onboardingDocs EmployeeDocument[]
   salaryAdvances SalaryAdvance[]
   mobileLoginSessions MobileLoginSession[]
+  employeeRequests EmployeeRequest[]
 
   @@unique([tenantId, employeeCode])
   @@index([tenantId, departmentId])
@@ -318,6 +320,23 @@ enum LeaveStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+model EmployeeRequest {
+  id          String   @id @default(cuid())
+  tenantId    String
+  employeeId  String
+  type        String
+  priority    String   @default("MEDIUM")
+  description String   @db.Text
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, employeeId])
 }
 
 model Payroll {

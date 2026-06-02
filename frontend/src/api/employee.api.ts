@@ -53,4 +53,7 @@ export const employeeApi = {
   uploadDocument: (formData: FormData) => api.post<{ success: boolean; data: any }>('/employees/me/documents', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  getRequests: () => api.get<{ success: boolean; data: any[] }>('/employees/requests'),
+  createRequest: (data: { type: string, priority: string, description: string }) => api.post<{ success: boolean; data: any }>('/employees/requests', data),
+  deleteRequest: (id: string) => api.delete<{ success: boolean; data: any }>(`/employees/requests/${id}`),
 }

@@ -30,11 +30,18 @@ const upload = multer({
 
 const router = Router()
 
+import { employeeRequestController } from '../controllers/employeeRequest.controller'
+
 // Endpoint accessible to any authenticated user (like EMPLOYEE)
 router.get('/me', authenticate, tenantIsolation, employeeController.getProfile)
 router.put('/me/signature', authenticate, tenantIsolation, employeeController.uploadSignature)
 router.put('/me/photo', authenticate, tenantIsolation, employeeController.uploadPhoto)
 router.post('/me/documents', authenticate, tenantIsolation, upload.single('file'), employeeController.uploadDocumentSelf)
+
+// Operations Requests
+router.get('/requests', authenticate, tenantIsolation, employeeRequestController.listRequests)
+router.post('/requests', authenticate, tenantIsolation, employeeRequestController.createRequest)
+router.delete('/requests/:id', authenticate, tenantIsolation, employeeRequestController.deleteRequest)
 
 router.use(authenticate, authorize('ADMIN', 'HR'), tenantIsolation)
 

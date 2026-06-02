@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FilePlus2, CheckCircle2, AlertCircle, Clock, Send, ShieldAlert, Trash2 } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
 import { triggerHrNotification } from '../../utils/notif'
+import { employeeApi } from '../../api/employee.api'
 
 interface RequestItem {
   id: string
@@ -9,7 +10,7 @@ interface RequestItem {
   priority: 'LOW' | 'MEDIUM' | 'HIGH'
   description: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  createdDate: string
+  createdAt: string
 }
 
 export default function MyRequests() {
@@ -24,22 +25,23 @@ export default function MyRequests() {
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
-  // Load from local storage
-  useEffect(() => {
-    const saved = localStorage.getItem('hrms_employee_requests')
-    if (saved) {
-      setRequests(JSON.parse(saved))
-    } else {
-      const defaultRequests: RequestItem[] = [
-        { id: 'REQ-901', type: 'Software License (WebStorm IDE)', priority: 'MEDIUM', description: 'Requesting personal development IDE subscription for project development.', status: 'APPROVED', createdDate: '2026-05-10' },
-        { id: 'REQ-902', type: 'Hardware Asset (External 4K Monitor)', priority: 'HIGH', description: 'Requesting a dual monitor setup to increase UI/UX design workflow efficiency.', status: 'PENDING', createdDate: '2026-05-24' }
-      ]
-      setRequests(defaultRequests)
-      localStorage.setItem('hrms_employee_requests', JSON.stringify(defaultRequests))
+  const fetchRequests = async () => {
+    try {
+      const res = await employeeApi.getRequests()
+      if (res.data.success) {
+        setRequests(res.data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch requests', error)
     }
+  }
+
+  // Load from backend
+  useEffect(() => {
+    fetchRequests()
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSuccessMsg('')
     setErrorMsg('')
@@ -56,28 +58,35 @@ export default function MyRequests() {
       LETTER: 'HR Verification Letter (Experience / NOC)'
     }
 
-    const newRequest: RequestItem = {
-      id: `REQ-${Math.floor(100 + Math.random() * 900)}`,
-      type: typeLabels[type] || type,
-      priority,
-      description,
-      status: 'PENDING',
-      createdDate: new Date().toISOString().split('T')[0]
-    }
+    try {
+      const res = await employeeApi.createRequest({
+        type: typeLabels[type] || type,
+        priority,
+        description
+      })
 
-    const updated = [newRequest, ...requests]
-    setRequests(updated)
-    localStorage.setItem('hrms_employee_requests', JSON.stringify(updated))
-    setSuccessMsg('Request submitted successfully!')
-    triggerHrNotification(`Employee ${fullName} submitted an operational request (${newRequest.type}).`)
-    setDescription('')
+      if (res.data.success) {
+        setSuccessMsg('Request submitted successfully!')
+        triggerHrNotification(`Employee ${fullName} submitted an operational request.`)
+        setDescription('')
+        fetchRequests()
+      }
+    } catch (error: any) {
+      setErrorMsg(error.response?.data?.message || 'Failed to submit request')
+    }
   }
 
-  const handleDelete = (id: string) => {
-    const updated = requests.filter(r => r.id !== id)
-    setRequests(updated)
-    localStorage.setItem('hrms_employee_requests', JSON.stringify(updated))
-    triggerHrNotification(`Employee ${fullName} canceled request ${id}.`)
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await employeeApi.deleteRequest(id)
+      if (res.data.success) {
+        triggerHrNotification(`Employee ${fullName} canceled request ${id}.`)
+        fetchRequests()
+      }
+    } catch (error: any) {
+      console.error('Failed to delete request', error)
+      setErrorMsg(error.response?.data?.message || 'Failed to delete request')
+    }
   }
 
   return (
@@ -167,7 +176,7 @@ export default function MyRequests() {
                 <p className="req-desc">{item.description}</p>
                 
                 <div className="request-card-footer">
-                  <span className="req-date">Submitted on: <strong>{item.createdDate}</strong></span>
+                  <span className="req-date">Submitted on: <strong>{new Date(item.createdAt).toLocaleDateString()}</strong></span>
                   <div className="req-footer-right">
                     <span className={`status-pill ${item.status.toLowerCase()}`}>
                       {item.status === 'APPROVED' && <CheckCircle2 size={12} />}
