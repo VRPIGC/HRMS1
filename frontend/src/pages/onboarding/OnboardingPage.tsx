@@ -249,25 +249,7 @@ export default function OnboardingPage() {
     if (!validateCurrentStep()) return
     if (!token || !invite) return
 
-    // Document Validation Gating
-    const requiredDocs = ['aadhaar', 'panCard', 'resume']
-    if (invite.experienceLevel === 'experienced') {
-      requiredDocs.push('previousPayslips')
-    }
-
-    const missingDocs = requiredDocs.filter((key) => !files[key as keyof typeof files])
-    if (missingDocs.length > 0) {
-      const friendlyNames: Record<string, string> = {
-        aadhaar: 'Aadhaar',
-        panCard: 'PAN Card',
-        resume: 'Resume',
-        previousPayslips: 'Previous Payslips',
-      }
-      const missingLabels = missingDocs.map((k) => friendlyNames[k] || k)
-      setError(`Please upload all required documents: ${missingLabels.join(', ')}`)
-      addToast('error', 'Documents Missing', `Required documents missing: ${missingLabels.join(', ')}`)
-      return
-    }
+    // Document Validation Gating disabled - all documents are optional
 
     try {
       setSubmitting(true)
@@ -455,7 +437,7 @@ export default function OnboardingPage() {
             </label>
             <label>
               UAN / PF Number
-              <Input value={formData.uanPfNumber} onChange={(e) => updateField('uanPfNumber', e.target.value)} required />
+              <Input value={formData.uanPfNumber} onChange={(e) => updateField('uanPfNumber', e.target.value)} />
             </label>
           </div>
         )
