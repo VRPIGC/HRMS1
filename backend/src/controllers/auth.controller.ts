@@ -144,8 +144,12 @@ export const authController = {
           <h2>Password Reset Request</h2>
           <p>You requested a password reset for your HRMS account.</p>
           <p>Please click the button below to reset your password. This link is valid for 1 hour.</p>
-          <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
-          <p>If you did not request this, please ignore this email.</p>
+          <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+          <p style="font-size: 14px; color: #64748b; margin-top: 20px;">
+            If the button above does not work, please copy and paste the following link into your web browser:<br><br>
+            <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; word-break: break-all;">${resetLink}</a>
+          </p>
+          <p style="margin-top: 30px;">If you did not request this, please ignore this email.</p>
         </div>
       `;
       
