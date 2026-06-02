@@ -3,7 +3,7 @@ import axios from 'axios'
 import { useAuthStore } from '../store/auth.store'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://hrms-3-gfof.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://hrms1-kk6q.onrender.com/api',
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -67,7 +67,7 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'https://hrms-3-gfof.onrender.com/api'}/auth/refresh`,
+          `${import.meta.env.VITE_API_URL || 'https://hrms1-kk6q.onrender.com/api'}/auth/refresh`,
           { refreshToken }
         )
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data

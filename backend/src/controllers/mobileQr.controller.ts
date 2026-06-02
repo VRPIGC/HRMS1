@@ -94,11 +94,10 @@ export const mobileQrController = {
    * Body: { sessionId, token, selfieBase64 }
    */
   async verifySelfie(req: Request, res: Response) {
-    const { sessionId, token, selfieBase64, faceTemplate } = req.body as {
+    const { sessionId, token, selfieBase64 } = req.body as {
       sessionId?: string
       token?: string
       selfieBase64?: string
-      faceTemplate?: string
     }
 
     if (!sessionId || !token || !selfieBase64) {
@@ -132,11 +131,11 @@ export const mobileQrController = {
       // 2 — Face verification
       if (employee.faceBaseline) {
         const { compareFaces } = await import('../utils/face.utils')
-        const result = compareFaces(faceTemplate || selfieBase64, employee.faceBaseline)
+        const result = compareFaces(selfieBase64, employee.faceBaseline)
 
         if (result.similarity === -1) {
           // Format mismatch — upgrade baseline silently
-          await prisma.employee.update({ where: { id: employee.id }, data: { faceBaseline: faceTemplate || selfieBase64 } })
+          await prisma.employee.update({ where: { id: employee.id }, data: { faceBaseline: selfieBase64 } })
         } else if (!result.match) {
           await prisma.mobileLoginSession.update({ where: { id: sessionId }, data: { status: 'FAILED' } })
 
@@ -151,7 +150,7 @@ export const mobileQrController = {
         }
       } else {
         // First-time — register baseline
-        await prisma.employee.update({ where: { id: employee.id }, data: { faceBaseline: faceTemplate || selfieBase64 } })
+        await prisma.employee.update({ where: { id: employee.id }, data: { faceBaseline: selfieBase64 } })
       }
 
       // 3 — Save selfie photo

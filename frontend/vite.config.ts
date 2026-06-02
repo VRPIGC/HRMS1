@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const getApiUrl = () => {
     let url = env.VITE_API_URL
     if (!url || url.includes('your-backend')) {
-      return 'https://hrms-4-i69h.onrender.com/api'
+      return 'https://hrms1-kk6q.onrender.com/api'
     }
     url = url.trim()
     if (!url.endsWith('/api')) {
@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
   const getWsUrl = () => {
     let url = env.VITE_WS_URL
     if (!url || url.includes('your-backend')) {
-      return 'wss://hrms-4-i69h.onrender.com'
+      return 'wss://hrms1-kk6q.onrender.com'
     }
     url = url.trim().replace(/\/$/, '')
     if (url.endsWith('/api')) {
