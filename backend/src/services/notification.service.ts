@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 // Lazy Resend client — instantiated only when an email is actually sent
 let _resend: Resend | null = null
@@ -10,6 +11,26 @@ function getResendClient(): Resend {
     _resend = new Resend(process.env.RESEND_API_KEY)
   }
   return _resend
+}
+
+// Lazy Nodemailer transporter
+let _transporter: nodemailer.Transporter | null = null
+function getNodemailerTransporter() {
+  if (!_transporter) {
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      throw new Error('SMTP credentials are not configured in environment variables.')
+    }
+    _transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+  }
+  return _transporter
 }
 
 export const notificationService = {
@@ -26,36 +47,62 @@ export const notificationService = {
       return { queued: true, logged: true }
     }
 
+    let useNodemailer = false
+
     try {
-      if (!process.env.RESEND_API_KEY) {
-        throw new Error('RESEND_API_KEY is missing in environment variables.')
+      if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith('re_placeholder')) {
+        useNodemailer = true
+      } else {
+        // Try Resend
+        const mappedAttachments = attachments?.map(att => ({
+          filename: att.filename,
+          content: Buffer.isBuffer(att.content) ? att.content.toString('base64') : att.content,
+        }))
+
+        const { data, error } = await getResendClient().emails.send({
+          from: process.env.SMTP_FROM || 'HRMS <onboarding@resend.dev>', 
+          to: [to],
+          subject,
+          html,
+          text: text || 'Please enable HTML to view this email.',
+          attachments: mappedAttachments,
+        })
+
+        if (error) {
+          console.error(`[Resend ERROR] Failed to send email to ${to}:`, error)
+          // Fallback to Nodemailer if API key is invalid or other error
+          useNodemailer = true
+        } else {
+          console.log(`[Resend] Email successfully sent to ${to}: ${data?.id}`)
+          return { success: true, messageId: data?.id }
+        }
       }
-
-      // Convert attachments to Resend format if they exist (Resend expects Base64 or Buffer, but Base64 is safer)
-      const mappedAttachments = attachments?.map(att => ({
-        filename: att.filename,
-        content: Buffer.isBuffer(att.content) ? att.content.toString('base64') : att.content,
-      }))
-
-      const { data, error } = await getResendClient().emails.send({
-        from: process.env.SMTP_FROM || 'HRMS <onboarding@resend.dev>', 
-        to: [to],
-        subject,
-        html,
-        text: text || 'Please enable HTML to view this email.',
-        attachments: mappedAttachments,
-      })
-
-      if (error) {
-        console.error(`[Resend ERROR] Failed to send email to ${to}:`, error)
-        throw new Error(error.message)
-      }
-
-      console.log(`[Resend] Email successfully sent to ${to}: ${data?.id}`)
-      return { success: true, messageId: data?.id }
     } catch (error: any) {
-      console.error(`[Resend ERROR Exception] Failed to send email to ${to}:`, error)
-      throw error
+      console.error(`[Resend ERROR Exception] Failed to send email to ${to}:`, error.message)
+      useNodemailer = true
+    }
+
+    if (useNodemailer) {
+      console.log(`[Nodemailer] Falling back to SMTP to send email to ${to}`)
+      try {
+        const transporter = getNodemailerTransporter()
+        const info = await transporter.sendMail({
+          from: process.env.SMTP_FROM || 'HRMS <no-reply@hrmsvrpigroup.com>',
+          to,
+          subject,
+          text: text || 'Please enable HTML to view this email.',
+          html,
+          attachments: attachments?.map(att => ({
+            filename: att.filename,
+            content: att.content
+          }))
+        })
+        console.log(`[Nodemailer] Email successfully sent to ${to}: ${info.messageId}`)
+        return { success: true, messageId: info.messageId }
+      } catch (smtpError: any) {
+        console.error(`[Nodemailer ERROR] Failed to send email to ${to}:`, smtpError.message)
+        throw new Error(`Email sending failed (both Resend and SMTP failed). Last error: ${smtpError.message}`)
+      }
     }
   },
 
