@@ -396,6 +396,18 @@ export default function Profile() {
                     required
                   />
                 </div>
+                <div className="form-group readonly">
+                  <label>UAN Number</label>
+                  <input
+                    type="text"
+                    value={employeeDetails?.payrollDetails?.uanNumber || 'N/A'}
+                    readOnly
+                  />
+                </div>
+              </div>
+              <div className="readonly-alert" style={{ marginTop: '20px' }}>
+                <Shield size={16} />
+                <span>UAN Number is managed by HR. If you require changes, please contact HR.</span>
               </div>
             </div>
           )}

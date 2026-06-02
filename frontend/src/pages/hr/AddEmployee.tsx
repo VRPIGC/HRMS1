@@ -290,6 +290,7 @@ export default function AddEmployee() {
                         {renderInput({ label: "Account Number", name: "accountNumber" })}
                         {renderInput({ label: "IFSC Code", name: "ifscCode" })}
                         {renderInput({ label: "PAN Number", name: "panNumber" })}
+                        {renderInput({ label: "UAN Number", name: "uanNumber" })}
                       </div>
                     </div>
                   )}
