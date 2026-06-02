@@ -157,12 +157,7 @@ export default function EditEmployee() {
       return
     }
 
-    if (!formData.uanNumber) {
-      setError('UAN Number is required.')
-      setIsSubmitting(false)
-      setActiveStep(3)
-      return
-    }
+    // UAN validation removed
 
     try {
       const fd = new FormData()
@@ -359,7 +354,7 @@ export default function EditEmployee() {
                         {renderInput({ label: "Account Number", name: "accountNumber" })}
                         {renderInput({ label: "IFSC Code", name: "ifscCode" })}
                         {renderInput({ label: "PAN Number", name: "panNumber" })}
-                        {renderInput({ label: "UAN Number", name: "uanNumber", required: true })}
+                        {renderInput({ label: "UAN Number", name: "uanNumber" })}
                         {renderSelect({ label: "PF Enabled", name: "pfEnabled", options: [{label: 'Yes', value: 'true'}, {label: 'No', value: 'false'}] })}
                         {renderSelect({ label: "ESI Enabled", name: "esiEnabled", options: [{label: 'Yes', value: 'true'}, {label: 'No', value: 'false'}] })}
                       </div>

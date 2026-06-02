@@ -65,26 +65,7 @@ export default function AddEmployee() {
       return
     }
 
-    if (!formData.uanNumber) {
-      setError('UAN Number is required.')
-      setIsSubmitting(false)
-      setActiveStep(3)
-      return
-    }
-
-    if (!files.profilePhoto) {
-      setError('Profile Photograph is required.')
-      setIsSubmitting(false)
-      setActiveStep(7)
-      return
-    }
-
-    if (!files.aadhaarCard) {
-      setError('Aadhaar Card is required.')
-      setIsSubmitting(false)
-      setActiveStep(7)
-      return
-    }
+    // Document Gating Validation disabled - all documents are optional
 
     // Document Gating Validation disabled - all documents are optional
 
@@ -297,7 +278,7 @@ export default function AddEmployee() {
                         {renderInput({ label: "Account Number", name: "accountNumber" })}
                         {renderInput({ label: "IFSC Code", name: "ifscCode" })}
                         {renderInput({ label: "PAN Number", name: "panNumber" })}
-                        {renderInput({ label: "UAN Number", name: "uanNumber", required: true })}
+                        {renderInput({ label: "UAN Number", name: "uanNumber" })}
                       </div>
                     </div>
                   )}
@@ -360,14 +341,14 @@ export default function AddEmployee() {
                       </div>
                       <div className="form-grid">
                         <div className={`file-upload-box ${files.profilePhoto ? 'file-uploaded' : ''}`}>
-                          <label>Profile Photograph <span style={{ color: '#ef4444' }}>*</span></label>
+                          <label>Profile Photograph</label>
                           <input type="file" name="profilePhoto" onChange={handleFileChange} accept="image/*" />
                           {files.profilePhoto
                             ? <div className="file-chosen">✅ {files.profilePhoto.name}</div>
                             : <div className="file-hint">JPG, PNG — Max 10MB</div>}
                         </div>
                         <div className={`file-upload-box ${files.aadhaarCard ? 'file-uploaded' : ''}`}>
-                          <label>Aadhaar Card <span style={{ color: '#ef4444' }}>*</span></label>
+                          <label>Aadhaar Card</label>
                           <input type="file" name="aadhaarCard" onChange={handleFileChange} accept=".pdf,.jpg,.png" />
                           {files.aadhaarCard
                             ? <div className="file-chosen">✅ {files.aadhaarCard.name}</div>

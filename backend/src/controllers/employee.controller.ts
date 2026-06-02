@@ -519,9 +519,7 @@ export const employeeController = {
 
       const data = req.body
 
-      if (data.uanNumber === undefined || data.uanNumber.trim() === '') {
-        return sendError(res, 'UAN Number is required.', 400)
-      }
+      // Validation for UAN removed
 
       // Validation
       if (!data.firstName || !data.lastName || !data.workEmail) {
