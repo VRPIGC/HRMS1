@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { superAdminApi, Company } from '../../api/superadmin.api'
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner'
+import { triggerHrNotification } from '../../utils/notif'
 
 export default function Companies() {
   const navigate = useNavigate()
@@ -68,6 +69,7 @@ export default function Companies() {
       setCompanies((prev) =>
         prev.map((c) => (c.id === selectedCompanyForCredits.id ? { ...c, credits: updated.credits } : c))
       )
+      triggerHrNotification(`Super Admin granted ${creditAmount} credits to ${selectedCompanyForCredits.name}.`)
       setSelectedCompanyForCredits(null)
       setCreditAmount(5000)
       setCreditDescription('Super Admin top-up')

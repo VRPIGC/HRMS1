@@ -38,7 +38,17 @@ export default function AppShell({ title, navItems }: Props) {
     try {
       const raw = localStorage.getItem('hrms_hr_notifications')
       if (raw) {
-        setNotifications(JSON.parse(raw))
+        let allNotifs = JSON.parse(raw)
+        
+        // Super Admin should only see credit-related notifications
+        if (user?.role === 'SUPER_ADMIN') {
+          allNotifs = allNotifs.filter((n: any) => {
+            const text = n.text.toLowerCase()
+            return text.includes('credit') || text.includes('paid') || text.includes('payment')
+          })
+        }
+        
+        setNotifications(allNotifs)
       } else {
         setNotifications([])
       }
@@ -50,12 +60,35 @@ export default function AppShell({ title, navItems }: Props) {
   const handleMarkAllNotificationsRead = () => {
     const updated = notifications.map(n => ({ ...n, read: true }))
     setNotifications(updated)
-    localStorage.setItem('hrms_hr_notifications', JSON.stringify(updated))
+    // NOTE: This will only mark the visible ones as read for Super Admin, which is fine.
+    // If they were to save back, they'd overwrite the main list if not careful.
+    // To be safe, we fetch the raw list, update only the matched IDs, and save back.
+    try {
+      const raw = localStorage.getItem('hrms_hr_notifications')
+      if (raw) {
+        let allNotifs = JSON.parse(raw)
+        const updatedIds = new Set(updated.map(n => n.id))
+        allNotifs = allNotifs.map((n: any) => updatedIds.has(n.id) ? { ...n, read: true } : n)
+        localStorage.setItem('hrms_hr_notifications', JSON.stringify(allNotifs))
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleClearAllNotifications = () => {
     setNotifications([])
-    localStorage.setItem('hrms_hr_notifications', JSON.stringify([]))
+    try {
+      const raw = localStorage.getItem('hrms_hr_notifications')
+      if (raw) {
+        let allNotifs = JSON.parse(raw)
+        const currentIds = new Set(notifications.map(n => n.id))
+        allNotifs = allNotifs.filter((n: any) => !currentIds.has(n.id))
+        localStorage.setItem('hrms_hr_notifications', JSON.stringify(allNotifs))
+      }
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleMarkAllMessagesRead = () => {

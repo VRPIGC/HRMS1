@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { paymentApi } from '../../api/payment.api'
 import { creditApi } from '../../api/credit.api'
 import { useAuthStore } from '../../store/auth.store'
+import { triggerHrNotification } from '../../utils/notif'
 
 export default function Wallet() {
   const [creditsToBuy, setCreditsToBuy] = useState<number>(1000)
@@ -60,6 +61,7 @@ export default function Wallet() {
         try {
           await paymentApi.verifyPhonePePayment(txnId, Number(credits))
           setSuccessMsg(`Successfully added ${credits} credits via PhonePe!`)
+          triggerHrNotification(`Super Admin purchased ${credits} credits via PhonePe.`)
         } catch (err: any) {
           setErrorMsg(err.response?.data?.message || 'PhonePe payment verification failed.')
         } finally {
@@ -115,6 +117,7 @@ export default function Wallet() {
                 creditsToBuy
               )
               setSuccessMsg(`Successfully added ${creditsToBuy} credits to your account!`)
+              triggerHrNotification(`Super Admin purchased ${creditsToBuy} credits via Razorpay.`)
             } catch (err: any) {
               setErrorMsg(err.response?.data?.message || 'Payment verification failed.')
             } finally {
@@ -175,6 +178,7 @@ export default function Wallet() {
             creditsToBuy
           )
           setSuccessMsg(`Successfully added ${creditsToBuy} credits to your account (Simulated Razorpay)!`)
+          triggerHrNotification(`Super Admin purchased ${creditsToBuy} credits via Simulated Razorpay.`)
           setSimStep('SUCCESS')
           setTimeout(() => {
             setShowSimModal(false)
