@@ -519,13 +519,44 @@ export default function Dashboard() {
     }
   }
 
-  // QR countdown timer
+  // QR countdown timer and polling fallback
   useEffect(() => {
     if (qrStatus !== 'ready') return
     if (qrCountdown <= 0) { setQrStatus('expired'); return }
     const t = setTimeout(() => setQrCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [qrStatus, qrCountdown])
+
+    let pollTimer: ReturnType<typeof setTimeout>
+    if (qrSessionId && qrCountdown % 3 === 0) {
+      pollTimer = setTimeout(async () => {
+        try {
+          const statusRes = await attendanceApi.getMobileQrStatus(qrSessionId)
+          const { status, accessToken: at, refreshToken: rt } = statusRes.data.data
+          if (status === 'VERIFIED' && qrStatus !== 'verified') {
+            setQrStatus('verified')
+            qrSocketRef.current?.disconnect()
+            const { user } = useAuthStore.getState()
+            if (user && at && rt) {
+              useAuthStore.getState().setAuth(user, at, rt)
+            }
+            await fetchTodayStatus()
+            triggerHrNotification(`Employee ${fullName} clocked in (Mobile QR Selfie).`)
+            setTimeout(() => setShowQrModal(false), 2500)
+          } else if (status === 'FAILED') {
+            setQrStatus('failed')
+            qrSocketRef.current?.disconnect()
+          } else if (status === 'EXPIRED') {
+            setQrStatus('expired')
+            qrSocketRef.current?.disconnect()
+          }
+        } catch { /* ignore */ }
+      }, 0)
+    }
+
+    return () => {
+      clearTimeout(t)
+      if (pollTimer) clearTimeout(pollTimer)
+    }
+  }, [qrStatus, qrCountdown, qrSessionId])
 
   const closeQrModal = () => {
     setShowQrModal(false)
