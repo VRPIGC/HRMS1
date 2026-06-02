@@ -157,6 +157,13 @@ export default function EditEmployee() {
       return
     }
 
+    if (!formData.uanNumber) {
+      setError('UAN Number is required.')
+      setIsSubmitting(false)
+      setActiveStep(3)
+      return
+    }
+
     try {
       const fd = new FormData()
       Object.keys(formData).forEach(key => fd.append(key, formData[key as keyof typeof formData]))
@@ -352,7 +359,7 @@ export default function EditEmployee() {
                         {renderInput({ label: "Account Number", name: "accountNumber" })}
                         {renderInput({ label: "IFSC Code", name: "ifscCode" })}
                         {renderInput({ label: "PAN Number", name: "panNumber" })}
-                        {renderInput({ label: "UAN Number", name: "uanNumber" })}
+                        {renderInput({ label: "UAN Number", name: "uanNumber", required: true })}
                         {renderSelect({ label: "PF Enabled", name: "pfEnabled", options: [{label: 'Yes', value: 'true'}, {label: 'No', value: 'false'}] })}
                         {renderSelect({ label: "ESI Enabled", name: "esiEnabled", options: [{label: 'Yes', value: 'true'}, {label: 'No', value: 'false'}] })}
                       </div>

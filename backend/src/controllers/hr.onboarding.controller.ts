@@ -18,6 +18,10 @@ export const hrOnboardingController = {
         return sendError(res, 'Missing essential employee information', 400)
       }
 
+      if (!data.uanNumber) {
+        return sendError(res, 'UAN Number is required.', 400)
+      }
+
       // Document Gating Validation: Profile Photo and Aadhaar Card are mandatory
       const uploadedFiles = (req.files || {}) as { [fieldname: string]: Express.Multer.File[] }
       if (!uploadedFiles['profilePhoto'] || !uploadedFiles['aadhaarCard']) {

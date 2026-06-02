@@ -65,6 +65,13 @@ export default function AddEmployee() {
       return
     }
 
+    if (!formData.uanNumber) {
+      setError('UAN Number is required.')
+      setIsSubmitting(false)
+      setActiveStep(3)
+      return
+    }
+
     if (!files.profilePhoto) {
       setError('Profile Photograph is required.')
       setIsSubmitting(false)
@@ -290,7 +297,7 @@ export default function AddEmployee() {
                         {renderInput({ label: "Account Number", name: "accountNumber" })}
                         {renderInput({ label: "IFSC Code", name: "ifscCode" })}
                         {renderInput({ label: "PAN Number", name: "panNumber" })}
-                        {renderInput({ label: "UAN Number", name: "uanNumber" })}
+                        {renderInput({ label: "UAN Number", name: "uanNumber", required: true })}
                       </div>
                     </div>
                   )}
