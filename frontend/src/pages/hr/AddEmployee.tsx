@@ -1,26 +1,56 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { hrApi } from '../../api/hr.api'
 import { CheckCircle, ChevronRight, UploadCloud, Shield, User, MapPin, Building, CreditCard, Activity } from 'lucide-react'
 
+const INITIAL_FORM_DATA = {
+  employeeCode: '',
+  firstName: '', lastName: '', gender: 'Male', dateOfBirth: '', mobileNumber: '', personalEmail: '', workEmail: '', maritalStatus: 'Single',
+  departmentId: '', designationId: '', employmentType: 'FULL_TIME', employmentStatus: 'ACTIVE', branchId: '', shift: 'General Shift', reportingManagerId: '', joiningDate: '',
+  salaryStructure: '', basicSalary: '', paymentType: 'Bank Transfer', bankName: '', accountNumber: '', ifscCode: '', panNumber: '', uanNumber: '', pfEnabled: 'false', esiEnabled: 'false',
+  attendanceType: 'FACIAL', geoFencingEnabled: 'false', twoFactorEnabled: 'false',
+  sendActivationEmail: 'true',
+  country: '', state: '', city: '', addressLine1: '', addressLine2: '', postalCode: '',
+  emergencyContactName: '', emergencyRelationship: '', emergencyMobile: '',
+  experienceLevel: 'fresher',
+}
+
 export default function AddEmployee() {
   const navigate = useNavigate()
-  const [activeStep, setActiveStep] = useState(1)
+  
+  const [activeStep, setActiveStep] = useState<number>(() => {
+    const saved = localStorage.getItem('onboard_active_step')
+    return saved ? parseInt(saved, 10) : 1
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [created, setCreated] = useState<{ employeeCode: string; name: string; email: string } | null>(null)
 
-  const [formData, setFormData] = useState({
-    employeeCode: '',
-    firstName: '', lastName: '', gender: 'Male', dateOfBirth: '', mobileNumber: '', personalEmail: '', workEmail: '', maritalStatus: 'Single',
-    departmentId: '', designationId: '', employmentType: 'FULL_TIME', employmentStatus: 'ACTIVE', branchId: '', shift: 'General Shift', reportingManagerId: '', joiningDate: '',
-    salaryStructure: '', basicSalary: '', paymentType: 'Bank Transfer', bankName: '', accountNumber: '', ifscCode: '', panNumber: '', uanNumber: '', pfEnabled: 'false', esiEnabled: 'false',
-    attendanceType: 'FACIAL', geoFencingEnabled: 'false', twoFactorEnabled: 'false',
-    sendActivationEmail: 'true',
-    country: '', state: '', city: '', addressLine1: '', addressLine2: '', postalCode: '',
-    emergencyContactName: '', emergencyRelationship: '', emergencyMobile: '',
-    experienceLevel: 'fresher',
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('onboard_form_data')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        return { ...INITIAL_FORM_DATA, ...parsed }
+      } catch (e) {
+        return INITIAL_FORM_DATA
+      }
+    }
+    return INITIAL_FORM_DATA
   })
+
+  useEffect(() => {
+    localStorage.setItem('onboard_active_step', activeStep.toString())
+  }, [activeStep])
+
+  useEffect(() => {
+    localStorage.setItem('onboard_form_data', JSON.stringify(formData))
+  }, [formData])
+
+  const clearOnboardingDraft = () => {
+    localStorage.removeItem('onboard_active_step')
+    localStorage.removeItem('onboard_form_data')
+  }
 
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
     aadhaarCard: null, panCard: null, resume: null, offerLetter: null, profilePhoto: null, previousPayslips: null
@@ -81,6 +111,7 @@ export default function AddEmployee() {
         name: data?.name || `${formData.firstName} ${formData.lastName}`,
         email: data?.email || formData.workEmail,
       })
+      clearOnboardingDraft()
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create employee. Please check all fields and try again.')
       setIsSubmitting(false)
@@ -147,23 +178,9 @@ export default function AddEmployee() {
               onClick={() => {
                 setCreated(null)
                 setActiveStep(1)
-                setFormData({
-                  employeeCode: '',
-                  firstName: '', lastName: '', gender: 'Male', dateOfBirth: '',
-                  mobileNumber: '', personalEmail: '', workEmail: '', maritalStatus: 'Single',
-                  departmentId: '', designationId: '', employmentType: 'FULL_TIME',
-                  employmentStatus: 'ACTIVE', branchId: '', shift: 'General Shift',
-                  reportingManagerId: '', joiningDate: '',
-                  salaryStructure: '', basicSalary: '', paymentType: 'Bank Transfer',
-                  bankName: '', accountNumber: '', ifscCode: '', panNumber: '',
-                  uanNumber: '', pfEnabled: 'false', esiEnabled: 'false',
-                  attendanceType: 'FACIAL', geoFencingEnabled: 'false',
-                  twoFactorEnabled: 'false', sendActivationEmail: 'true',
-                  country: '', state: '', city: '', addressLine1: '', addressLine2: '',
-                  postalCode: '', emergencyContactName: '', emergencyRelationship: '',
-                  emergencyMobile: '', experienceLevel: 'fresher',
-                })
+                setFormData(INITIAL_FORM_DATA)
                 setFiles({ aadhaarCard: null, panCard: null, resume: null, offerLetter: null, profilePhoto: null })
+                clearOnboardingDraft()
               }}
             >
               Add Another Employee

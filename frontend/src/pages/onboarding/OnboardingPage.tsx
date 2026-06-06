@@ -164,10 +164,30 @@ export default function OnboardingPage() {
       try {
         setLoading(true)
         setSubmittedInvite(null)
-        setCurrentStep(0)
+        
         const response = await onboardingApi.getInviteByToken(token)
         setInvite(response)
-        setFormData(createFormState(response))
+        
+        const savedStep = localStorage.getItem(`onboard_candidate_step_${token}`)
+        if (savedStep) {
+          setCurrentStep(parseInt(savedStep, 10))
+        } else {
+          setCurrentStep(0)
+        }
+        
+        const defaultForm = createFormState(response)
+        const savedForm = localStorage.getItem(`onboard_candidate_form_${token}`)
+        if (savedForm) {
+          try {
+            const parsed = JSON.parse(savedForm)
+            setFormData({ ...defaultForm, ...parsed })
+          } catch (e) {
+            setFormData(defaultForm)
+          }
+        } else {
+          setFormData(defaultForm)
+        }
+
         setFiles(createFileState())
         setError('')
       } catch (err: any) {
@@ -179,6 +199,25 @@ export default function OnboardingPage() {
 
     loadInvite()
   }, [token])
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem(`onboard_candidate_step_${token}`, currentStep.toString())
+    }
+  }, [currentStep, token])
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem(`onboard_candidate_form_${token}`, JSON.stringify(formData))
+    }
+  }, [formData, token])
+
+  const clearCandidateDraft = () => {
+    if (token) {
+      localStorage.removeItem(`onboard_candidate_step_${token}`)
+      localStorage.removeItem(`onboard_candidate_form_${token}`)
+    }
+  }
 
   const currentStepMeta = STEPS[currentStep]
   const progressPercentage = useMemo(() => ((currentStep + 1) / STEPS.length) * 100, [currentStep])
@@ -269,6 +308,7 @@ export default function OnboardingPage() {
       setSubmittedInvite(nextInvite)
       setInvite(nextInvite)
       addToast('success', 'Onboarding submitted', 'Your submission has been shared with HR for review.')
+      clearCandidateDraft()
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to submit onboarding details.'
       setError(message)

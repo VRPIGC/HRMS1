@@ -65,7 +65,7 @@ h1, h2, h3, h4, h5, h6 {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px minmax(0, 1fr);
   background-color: transparent;
 }
 
@@ -1372,7 +1372,7 @@ tr:hover td {
 /* Tablet Landscape & Small Desktop (900px - 1023px) */
 @media (max-width: 1024px) {
   .app-shell {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 240px minmax(0, 1fr);
   }
 
   .sidebar {
@@ -1411,7 +1411,7 @@ tr:hover td {
 /* Tablet Portrait (768px - 899px) */
 @media (max-width: 899px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     position: relative;
   }
 
@@ -1790,7 +1790,7 @@ tr:hover td {
 /* Legacy Mobile Support (below 900px) */
 @media (max-width: 900px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     position: relative;
   }
 
