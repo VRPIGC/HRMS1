@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Copy, X } from 'lucide-react'
 
@@ -32,7 +32,17 @@ const initialForm = {
 
 export function AddEmployeeModal({ open, onClose, onCreated, standalone = false, creatorLabel = 'Team', reviewPath }: Props) {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState(initialForm)
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('onboard_modal_draft')
+    if (saved) {
+      try {
+        return { ...initialForm, ...JSON.parse(saved) }
+      } catch (e) {
+        return initialForm
+      }
+    }
+    return initialForm
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successInvite, setSuccessInvite] = useState<OnboardingInvite | null>(null)
@@ -42,10 +52,15 @@ export function AddEmployeeModal({ open, onClose, onCreated, standalone = false,
 
   const resetState = () => {
     setFormData(initialForm)
+    localStorage.removeItem('onboard_modal_draft')
     setError('')
     setSuccessInvite(null)
     setCopyLabel('Copy Link')
   }
+
+  useEffect(() => {
+    localStorage.setItem('onboard_modal_draft', JSON.stringify(formData))
+  }, [formData])
 
   const handleClose = () => {
     resetState()
